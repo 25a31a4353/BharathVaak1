@@ -35,12 +35,12 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2">
           <img
             src="https://lh3.googleusercontent.com/aida/AEtjO1XmPvKsVXJgVOD7BF_cGFc9ZA2nr5zf1WakYU50hlqXDcMWXIGkagU6DsoTASwrKMPotF23c2iOkPcTFvGaahK_HuaTmlsSD48e1cJNiJyZuNGHqhnqbIhZvDfELlV5SXvA_Df_cVqmQDCK-txEdk8IPqRLspVCBO0ogRWKFiXvcPzoxia4g9D7_E7Ub6p3E9ZnOUJECHGPf6OUrEuJMvHOrT17MULheMeBj0qT3FAB2spriwXQ1NhLuc8r"
-            alt="BharathVaak Civic Emblem"
+            alt="Akashvani Civic Emblem"
             className="h-8 w-auto object-contain"
           />
           <div className="flex flex-col">
             <span className="font-display font-bold text-[20px] tracking-tight text-[#081534] leading-none">
-              BharathVaak
+              Akashvani
             </span>
             <div className="relative">
               <button

@@ -16,7 +16,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   const testSirenSound = () => {
     if ('speechSynthesis' in window) {
-      const msg = new SpeechSynthesisUtterance('This is a test of the BharathVaak Disaster Alert System.');
+      const msg = new SpeechSynthesisUtterance('This is a test of the Akashvani Disaster Alert System.');
       msg.lang = 'en-IN';
       window.speechSynthesis.speak(msg);
     }

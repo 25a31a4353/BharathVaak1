@@ -102,7 +102,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   const wardLocation = `Ward 8, Jagannadhapuram, ${location}`;
 
   const sendWhatsAppSOS = () => {
-    const sosMsg = `[CRITICAL SOS - BHARATHVAAK DISASTER RESCUE]\nName: Citizen in Distress\nLocation: ${wardLocation}\nGPS Coordinates: https://maps.google.com/?q=16.8142,81.5283\nNeed immediate SDRF flood evacuation and emergency rescue!`;
+    const sosMsg = `[CRITICAL SOS - AKASHVANI DISASTER RESCUE]\nName: Citizen in Distress\nLocation: ${wardLocation}\nGPS Coordinates: https://maps.google.com/?q=16.8142,81.5283\nNeed immediate SDRF flood evacuation and emergency rescue!`;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(sosMsg)}`;
     window.open(url, '_blank');
   };

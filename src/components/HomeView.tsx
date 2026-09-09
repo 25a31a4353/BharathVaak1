@@ -24,7 +24,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     setTimeout(() => setShowToast(false), 3000);
 
     // Optional share to family via WhatsApp
-    const safeText = `I have marked myself SAFE during the Godavari Flood advisory in ${location}. Recorded via BharathVaak DPI Public Safety.`;
+    const safeText = `I have marked myself SAFE during the Godavari Flood advisory in ${location}. Recorded via Akashvani DPI Public Safety.`;
     if (navigator.share) {
       navigator.share({ title: 'Safety Confirmation', text: safeText }).catch(() => {});
     }

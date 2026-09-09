@@ -60,13 +60,13 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
     if (navigator.share) {
       navigator
         .share({
-          title: `BharathVaak Emergency: ${title}`,
+          title: `Akashvani Emergency: ${title}`,
           text: `[CIVIC CRISIS BULLETIN] ${title} - ${text}`,
           url: window.location.href,
         })
         .catch(() => {});
     } else {
-      navigator.clipboard?.writeText(`[BharathVaak Emergency Alert]\n${title}\n${text}`);
+      navigator.clipboard?.writeText(`[Akashvani Emergency Alert]\n${title}\n${text}`);
       showToast(language === 'te' ? 'హెచ్చరిక వివరాలు కాపీ చేయబడ్డాయి!' : 'Alert bulletin copied to clipboard!');
     }
   };
