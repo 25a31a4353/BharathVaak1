@@ -169,6 +169,8 @@ export const SHELTERS_DATA: ShelterItem[] = [
     medicalOfficer: 'Dr. K. Srinivas (Civil Surgeon on Duty)',
     phone: '08818-222108',
     coordinates: { x: 42, y: 38 },
+    lat: 16.8285,
+    lon: 81.5393,
     status: 'active',
   },
   {
@@ -183,6 +185,8 @@ export const SHELTERS_DATA: ShelterItem[] = [
     medicalOfficer: 'Dr. P. Lakshmi (PHC Pentapadu)',
     phone: '08818-223450',
     coordinates: { x: 68, y: 55 },
+    lat: 16.8110,
+    lon: 81.5450,
     status: 'active',
   },
   {
@@ -197,6 +201,8 @@ export const SHELTERS_DATA: ShelterItem[] = [
     medicalOfficer: 'Dr. M. Venkat Rao (Municipal Health Officer)',
     phone: '08818-224190',
     coordinates: { x: 30, y: 62 },
+    lat: 16.8040,
+    lon: 81.5230,
     status: 'nearing_capacity',
   },
 ];

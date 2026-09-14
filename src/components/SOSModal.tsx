@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Language } from '../types';
+import { Language, GovDecision, UserLocationState } from '../types';
+import { govApi } from '../services/govApi';
 
 interface SOSModalProps {
   isOpen: boolean;
   onClose: () => void;
   language: Language;
   location: string;
+  userLocation?: UserLocationState;
 }
 
 export const SOSModal: React.FC<SOSModalProps> = ({
@@ -13,10 +15,15 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   onClose,
   language,
   location,
+  userLocation,
 }) => {
   const [sirenPlaying, setSirenPlaying] = useState(false);
   const [strobeActive, setStrobeActive] = useState(false);
   const [strobeState, setStrobeState] = useState(false);
+  const [govDecision, setGovDecision] = useState<GovDecision | null>(null);
+  const [isTransmittingSOS, setIsTransmittingSOS] = useState(false);
+  const [sosTransmitted, setSosTransmitted] = useState(false);
+
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -33,7 +40,9 @@ export const SOSModal: React.FC<SOSModalProps> = ({
       setSirenPlaying(false);
     } else {
       try {
-        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const AudioContextClass =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         const ctx = new AudioContextClass();
         audioCtxRef.current = ctx;
 
@@ -86,6 +95,40 @@ export const SOSModal: React.FC<SOSModalProps> = ({
     return () => clearInterval(interval);
   }, [strobeActive]);
 
+  // Transmit SOS beacon to government server upon opening or user trigger
+  useEffect(() => {
+    if (isOpen && !sosTransmitted) {
+      handleTransmitBeacon();
+    }
+  }, [isOpen]);
+
+  const handleTransmitBeacon = async () => {
+    setIsTransmittingSOS(true);
+    try {
+      const liveLat = userLocation?.latitude ?? 16.8142;
+      const liveLon = userLocation?.longitude ?? 81.5283;
+      const locationName = userLocation?.displayName || userLocation?.shortName || location;
+
+      const res = await govApi.sendSOSBeacon({
+        latitude: liveLat,
+        longitude: liveLon,
+        ward: `${locationName}`,
+        locationName,
+        accuracyMeters: userLocation?.accuracyMeters,
+        victimStatus: 'Inundation in progress; evacuation required',
+        medicalEmergency: false,
+      });
+      if (res.decision) {
+        setGovDecision(res.decision);
+        setSosTransmitted(true);
+      }
+    } catch (err) {
+      console.error('SOS dispatch error:', err);
+    } finally {
+      setIsTransmittingSOS(false);
+    }
+  };
+
   // Clean up on unmount or close
   useEffect(() => {
     if (!isOpen && sirenPlaying) {
@@ -98,11 +141,13 @@ export const SOSModal: React.FC<SOSModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentCoords = '16.8142° N, 81.5283° E';
-  const wardLocation = `Ward 8, Jagannadhapuram, ${location}`;
+  const liveLat = userLocation?.latitude ?? 16.8142;
+  const liveLon = userLocation?.longitude ?? 81.5283;
+  const currentCoords = `${liveLat.toFixed(4)}° N, ${liveLon.toFixed(4)}° E`;
+  const wardLocation = userLocation?.displayName || userLocation?.shortName || `Ward 8, Jagannadhapuram, ${location}`;
 
   const sendWhatsAppSOS = () => {
-    const sosMsg = `[CRITICAL SOS - AKASHVANI DISASTER RESCUE]\nName: Citizen in Distress\nLocation: ${wardLocation}\nGPS Coordinates: https://maps.google.com/?q=16.8142,81.5283\nNeed immediate SDRF flood evacuation and emergency rescue!`;
+    const sosMsg = `[CRITICAL SOS - AKASHVANI DISASTER RESCUE]\nName: Citizen in Distress\nLocation: ${wardLocation}\nGPS Coordinates: https://maps.google.com/?q=${liveLat},${liveLon}\nAccuracy: ±${userLocation?.accuracyMeters || 15}m\nNeed immediate SDRF flood evacuation and emergency rescue!`;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(sosMsg)}`;
     window.open(url, '_blank');
   };
@@ -118,7 +163,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
         />
       )}
 
-      <div className="relative z-20 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-[#ba1a1a] flex flex-col animate-in zoom-in-95">
+      <div className="relative z-20 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-[#ba1a1a] flex flex-col animate-in zoom-in-95 max-h-[90vh]">
         {/* Top Header */}
         <div className="bg-[#ba1a1a] text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -129,8 +174,9 @@ export const SOSModal: React.FC<SOSModalProps> = ({
               <h2 className="font-display text-[18px] font-bold leading-tight">
                 {language === 'en' ? 'Emergency SOS Beacon' : 'అత్యవసర రక్షణ బీకన్'}
               </h2>
-              <span className="text-[11px] text-[#ffdad6] font-medium">
-                {language === 'en' ? 'Direct SDRF & Police Dispatch' : 'ఎస్.డి.ఆర్.ఎఫ్ & పోలీస్ అత్యవసర సహాయం'}
+              <span className="text-[11px] text-[#ffdad6] font-medium flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                <span>Linked to Akashvani Govt Platform</span>
               </span>
             </div>
           </div>
@@ -143,7 +189,84 @@ export const SOSModal: React.FC<SOSModalProps> = ({
           </button>
         </div>
 
-        <div className="p-4 flex flex-col gap-3.5 max-h-[80vh] overflow-y-auto">
+        <div className="p-4 flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
+          {/* Government Decision & Escape Response Banner */}
+          {govDecision ? (
+            <div className="bg-[#081534] text-white p-3.5 rounded-xl border border-[#43a55d] flex flex-col gap-2 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#43a55d] flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#43a55d] animate-ping"></span>
+                  GOVERNMENT DECISION CONFIRMED
+                </span>
+                <span className="text-[10px] text-[#dae2fd] font-mono">
+                  {govDecision.caseId || 'REGISTERED'}
+                </span>
+              </div>
+
+              <div className="text-[13px] font-bold text-[#ffdad6]">
+                Priority: {govDecision.severity || 'RED ALERT'} — SDRF Rescue Unit Alerted
+              </div>
+
+              {govDecision.isRedZone && (
+                <div className="bg-[#ba1a1a] p-2 rounded-lg text-[11px] font-bold text-white flex items-center gap-1.5 border border-red-300">
+                  <span className="material-symbols-outlined text-[16px]">warning</span>
+                  <span>OFFICIAL RED ZONE DECLARED ON GOVERNMENT PORTAL</span>
+                </div>
+              )}
+
+              {/* Escape Guidance */}
+              <div className="bg-white/10 p-2.5 rounded-lg flex flex-col gap-1 text-[11px] text-[#dae2fd]">
+                <span className="font-bold text-white uppercase text-[10px] tracking-wider">
+                  Immediate Escape Guidance:
+                </span>
+                {govDecision.immediateEscapeGuidance?.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-1.5">
+                    <span className="text-[#fe8c58] font-bold">{idx + 1}.</span>
+                    <span>{step}</span>
+                  </div>
+                )) || (
+                  <div>
+                    Ascend to upper floor or high ground. SDRF rescue boats dispatched.
+                  </div>
+                )}
+              </div>
+
+              {/* Safe Haven with OSRM Road Distance */}
+              {govDecision.safeHaven && (
+                <div className="bg-white/10 p-2 rounded-lg flex items-center justify-between text-[11px]">
+                  <div>
+                    <span className="text-[#43a55d] font-bold">Fastest Escape Corridor:</span>
+                    <div className="font-semibold text-white">{govDecision.safeHaven.name}</div>
+                    <div className="text-[#dae2fd] text-[10px]">
+                      Distance: {govDecision.safeHaven.routeDistanceKm} km • ~
+                      {govDecision.safeHaven.travelTimeMinutes} mins (via verified OSRM geometry)
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-[24px] text-[#43a55d]">
+                    navigation
+                  </span>
+                </div>
+              )}
+
+              <a
+                href="https://akashvani-production.up.railway.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-[#dae2fd] underline hover:text-white flex items-center gap-1 mt-0.5"
+              >
+                <span>Track distress packet on Government Web Portal</span>
+                <span className="material-symbols-outlined text-[11px]">open_in_new</span>
+              </a>
+            </div>
+          ) : isTransmittingSOS ? (
+            <div className="bg-[#f2f3ff] p-3 rounded-xl border border-[#eaedff] flex items-center gap-3">
+              <span className="w-5 h-5 border-2 border-[#ba1a1a] border-t-transparent rounded-full animate-spin flex-shrink-0"></span>
+              <div className="text-[12px] text-[#081534] font-semibold">
+                Transmitting distress coordinates to Akashvani Government Portal...
+              </div>
+            </div>
+          ) : null}
+
           {/* Geo-location confirmation badge */}
           <div className="bg-[#f2f3ff] p-3 rounded-xl border border-[#eaedff] flex flex-col gap-1">
             <div className="flex items-center justify-between text-[11px] font-bold text-[#45464e]">
@@ -161,7 +284,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={toggleSiren}
-              className={`min-h-[52px] px-3 rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`min-h-[50px] px-3 rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 transition-all shadow-sm ${
                 sirenPlaying
                   ? 'bg-[#ba1a1a] text-white ring-4 ring-[#ba1a1a]/30 animate-pulse'
                   : 'bg-[#eaedff] text-[#081534] hover:bg-[#dae2fd]'
@@ -183,7 +306,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
 
             <button
               onClick={() => setStrobeActive(!strobeActive)}
-              className={`min-h-[52px] px-3 rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`min-h-[50px] px-3 rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 transition-all shadow-sm ${
                 strobeActive
                   ? 'bg-[#fe8c58] text-[#712800] ring-4 ring-[#fe8c58]/30 animate-pulse'
                   : 'bg-[#eaedff] text-[#081534] hover:bg-[#dae2fd]'
@@ -213,46 +336,46 @@ export const SOSModal: React.FC<SOSModalProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <a
                 href="tel:112"
-                className="bg-[#081534] hover:bg-[#1e2a4a] text-white p-3 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
+                className="bg-[#081534] hover:bg-[#1e2a4a] text-white p-2.5 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
               >
                 <div>
-                  <div className="text-[11px] text-[#dae2fd]">National Unified</div>
-                  <div className="text-[16px] font-bold">112 Police/Fire</div>
+                  <div className="text-[10px] text-[#dae2fd]">National Unified</div>
+                  <div className="text-[15px] font-bold">112 Police</div>
                 </div>
-                <span className="material-symbols-outlined text-[22px]">call</span>
+                <span className="material-symbols-outlined text-[20px]">call</span>
               </a>
 
               <a
                 href="tel:08818-222108"
-                className="bg-[#ba1a1a] hover:bg-[#93000a] text-white p-3 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
+                className="bg-[#ba1a1a] hover:bg-[#93000a] text-white p-2.5 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
               >
                 <div>
-                  <div className="text-[11px] text-[#ffdad6]">Flood Rescue</div>
-                  <div className="text-[14px] font-bold">SDRF Boat Unit</div>
+                  <div className="text-[10px] text-[#ffdad6]">Flood Rescue</div>
+                  <div className="text-[13px] font-bold">SDRF Boat Unit</div>
                 </div>
-                <span className="material-symbols-outlined text-[22px]">directions_boat</span>
+                <span className="material-symbols-outlined text-[20px]">directions_boat</span>
               </a>
 
               <a
                 href="tel:108"
-                className="bg-[#003313] hover:bg-[#00210a] text-white p-3 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
+                className="bg-[#003313] hover:bg-[#00210a] text-white p-2.5 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
               >
                 <div>
-                  <div className="text-[11px] text-[#95f8a7]">Medical Trauma</div>
-                  <div className="text-[16px] font-bold">108 Ambulance</div>
+                  <div className="text-[10px] text-[#95f8a7]">Medical Trauma</div>
+                  <div className="text-[15px] font-bold">108 Ambulance</div>
                 </div>
-                <span className="material-symbols-outlined text-[22px]">local_hospital</span>
+                <span className="material-symbols-outlined text-[20px]">local_hospital</span>
               </a>
 
               <a
                 href="tel:1077"
-                className="bg-[#9d4314] hover:bg-[#7d2d00] text-white p-3 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
+                className="bg-[#9d4314] hover:bg-[#7d2d00] text-white p-2.5 rounded-xl flex items-center justify-between shadow-sm active:scale-95 transition-all"
               >
                 <div>
-                  <div className="text-[11px] text-[#ffdbcd]">Disaster Command</div>
-                  <div className="text-[16px] font-bold">1077 Toll-Free</div>
+                  <div className="text-[10px] text-[#ffdbcd]">Disaster Command</div>
+                  <div className="text-[15px] font-bold">1077 Toll-Free</div>
                 </div>
-                <span className="material-symbols-outlined text-[22px]">support_agent</span>
+                <span className="material-symbols-outlined text-[20px]">support_agent</span>
               </a>
             </div>
           </div>
@@ -260,7 +383,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
           {/* Broadcast SOS to WhatsApp */}
           <button
             onClick={sendWhatsAppSOS}
-            className="min-h-[46px] w-full rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-[13px] shadow flex items-center justify-center gap-2 active:scale-95 transition-all mt-1"
+            className="min-h-[44px] w-full rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-[13px] shadow flex items-center justify-center gap-2 active:scale-95 transition-all mt-1"
           >
             <span className="material-symbols-outlined text-[20px]">share_location</span>
             <span>
