@@ -7,6 +7,7 @@ import { AlertsView } from './components/AlertsView';
 import { HomeView } from './components/HomeView';
 import { MapView } from './components/MapView';
 import { CommunityView } from './components/CommunityView';
+import { ChecklistsView } from './components/ChecklistsView';
 import { SOSModal } from './components/SOSModal';
 import { CitizenReportModal } from './components/CitizenReportModal';
 import { NotificationsModal } from './components/NotificationsModal';
@@ -16,6 +17,7 @@ import { useUserLocation } from './hooks/useUserLocation';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('alerts');
+  const [selectedDisasterId, setSelectedDisasterId] = useState<string>('cyclone');
   const [language, setLanguage] = useState<Language>('en');
   const [alerts, setAlerts] = useState<AlertItem[]>(INITIAL_ALERTS);
   const [govStatus, setGovStatus] = useState<GovStatus | null>(null);
@@ -82,6 +84,13 @@ export default function App() {
     );
   };
 
+  const handleOpenChecklist = (disasterId?: string) => {
+    if (disasterId) {
+      setSelectedDisasterId(disasterId);
+    }
+    setCurrentTab('checklists');
+  };
+
   // Add new citizen report to the live feed
   const handleAddAlert = (newAlert: AlertItem) => {
     setAlerts((prev) => [newAlert, ...prev]);
@@ -113,6 +122,7 @@ export default function App() {
             onNavigateTab={setCurrentTab}
             onOpenReportModal={() => setIsReportModalOpen(true)}
             onConfirmCommunityAlert={handleConfirmCommunityAlert}
+            onOpenChecklist={handleOpenChecklist}
           />
         )}
 
@@ -126,6 +136,16 @@ export default function App() {
             isTelemetryLoading={isTelemetryLoading}
             onRefreshTelemetry={refreshTelemetry}
             onRequestLiveGps={requestLiveGps}
+            onOpenChecklist={handleOpenChecklist}
+          />
+        )}
+
+        {currentTab === 'checklists' && (
+          <ChecklistsView
+            language={language}
+            onNavigateTab={setCurrentTab}
+            userLocation={userLocation}
+            initialDisasterId={selectedDisasterId}
           />
         )}
 

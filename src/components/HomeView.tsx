@@ -11,6 +11,7 @@ interface HomeViewProps {
   isTelemetryLoading?: boolean;
   onRefreshTelemetry?: () => void;
   onRequestLiveGps?: () => void;
+  onOpenChecklist?: (disasterId?: string) => void;
 }
 
 // Haversine formula to calculate accurate distance in km
@@ -37,6 +38,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   isTelemetryLoading,
   onRefreshTelemetry,
   onRequestLiveGps,
+  onOpenChecklist,
 }) => {
   const [isSafeMarked, setIsSafeMarked] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -436,6 +438,71 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <span>{language === 'en' ? 'Open Map' : 'మ్యాప్ తెరవండి'}</span>
           <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
         </button>
+      </div>
+
+      {/* Offline Disaster Preparedness Checklists Banner */}
+      <div className="bg-gradient-to-r from-[#1e1b4b] to-[#0f172a] text-white p-4 rounded-xl shadow-md border border-[#38bdf8]/40 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#38bdf8]/20 border border-[#38bdf8] flex items-center justify-center text-[#38bdf8] flex-shrink-0">
+              <span className="material-symbols-outlined text-[24px]">fact_check</span>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="bg-[#38bdf8]/20 text-[#38bdf8] text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider">
+                  100% Offline Ready
+                </span>
+                <span className="text-[10px] text-[#94a3b8] hidden xs:inline">
+                  Zero Data Needed
+                </span>
+              </div>
+              <h3 className="text-[13px] font-bold text-white mt-0.5 leading-tight">
+                {language === 'en' ? 'Actionable Disaster Checklists' : 'విపత్తు రక్షణ యాక్షన్ చెక్‌లిస్ట్‌లు'}
+              </h3>
+              <p className="text-[11px] text-[#94a3b8] mt-0.5">
+                {language === 'en'
+                  ? 'Cyclone, Flood, Blackout, Heatwave & 72-Hour Survival Go-Bag with local emergency SMS generator.'
+                  : 'తుఫాను, వరదలు, విద్యుత్ అంతరాయం & 72 గంటల సర్వైవల్ కిట్ మార్గదర్శకాలు.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onOpenChecklist ? onOpenChecklist('cyclone') : onNavigateTab('checklists')}
+            className="px-3 py-2 rounded-lg bg-[#38bdf8] hover:bg-[#0284c7] text-[#0f172a] text-[12px] font-bold shadow active:scale-95 transition-all flex items-center gap-1 flex-shrink-0"
+          >
+            <span>{language === 'en' ? 'View Guide' : 'చూడండి'}</span>
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          </button>
+        </div>
+
+        {/* Quick disaster shortcut chips */}
+        <div className="flex items-center gap-2 pt-1 border-t border-white/10 overflow-x-auto scrollbar-none text-[11px]">
+          <span className="text-[10px] text-[#94a3b8] font-bold uppercase flex-shrink-0">
+            {language === 'en' ? 'Quick jump:' : 'నేరుగా:'}
+          </span>
+          <button
+            onClick={() => onOpenChecklist ? onOpenChecklist('cyclone') : onNavigateTab('checklists')}
+            className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center gap-1 flex-shrink-0 text-[11px]"
+          >
+            <span>🌀</span>
+            <span>{language === 'en' ? 'Cyclone' : 'తుఫాను'}</span>
+          </button>
+          <button
+            onClick={() => onOpenChecklist ? onOpenChecklist('flood') : onNavigateTab('checklists')}
+            className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center gap-1 flex-shrink-0 text-[11px]"
+          >
+            <span>🌊</span>
+            <span>{language === 'en' ? 'Flood' : 'వరదలు'}</span>
+          </button>
+          <button
+            onClick={() => onOpenChecklist ? onOpenChecklist('gobag') : onNavigateTab('checklists')}
+            className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center gap-1 flex-shrink-0 text-[11px]"
+          >
+            <span>🧰</span>
+            <span>{language === 'en' ? '72h Kit' : 'గో-బ్యాగ్'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Nearest Relief Shelters Summary with Real GPS Distance */}

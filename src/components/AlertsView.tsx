@@ -8,6 +8,7 @@ interface AlertsViewProps {
   onNavigateTab: (tab: NavTab) => void;
   onOpenReportModal: () => void;
   onConfirmCommunityAlert: (id: string) => void;
+  onOpenChecklist?: (disasterId?: string) => void;
 }
 
 export const AlertsView: React.FC<AlertsViewProps> = ({
@@ -16,6 +17,7 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
   onNavigateTab,
   onOpenReportModal,
   onConfirmCommunityAlert,
+  onOpenChecklist,
 }) => {
   const [activeFilter, setActiveFilter] = useState<AlertCategory>('all');
   const [expandedProtocols, setExpandedProtocols] = useState<Record<string, boolean>>({});
@@ -167,6 +169,31 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
         <div className="absolute -right-3 -bottom-3 opacity-10 text-white pointer-events-none">
           <span className="material-symbols-outlined text-[64px]">shield</span>
         </div>
+      </div>
+
+      {/* Offline Disaster Checklists Quick Action Banner */}
+      <div className="bg-[#e7f7ed] border border-[#43a55d]/40 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-[#43a55d] text-[#00210a] flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-[20px]">fact_check</span>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[12px] font-bold text-[#0f5128] truncate">
+              {language === 'en' ? 'Offline Disaster Preparedness Checklists' : 'ఆఫ్‌లైన్ విపత్తు రక్షణ చెక్‌లిస్ట్‌లు'}
+            </span>
+            <span className="text-[11px] text-[#216b35] truncate">
+              {language === 'en' ? 'Cyclone, Flood & 72h Survival Kit (100% Data-Free)' : 'తుఫాను, వరదలు & సర్వైవల్ కిట్ (డేటా అవసరం లేదు)'}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onOpenChecklist ? onOpenChecklist('cyclone') : onNavigateTab('checklists')}
+          className="px-3 py-1.5 rounded-lg bg-[#081534] hover:bg-[#152758] text-white text-[11px] font-bold shadow-xs flex items-center gap-1 flex-shrink-0 active:scale-95 transition-all"
+        >
+          <span>{language === 'en' ? 'Open Checklists' : 'చెక్‌లిస్ట్ తెరవండి'}</span>
+          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </button>
       </div>
 
       {/* Real-time Government Decision & Environmental Telemetry Card */}
@@ -665,6 +692,27 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
                     </button>
 
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          const titleLower = item.titleEn.toLowerCase();
+                          const targetDisaster =
+                            item.category.includes('weather') || titleLower.includes('cyclon') || titleLower.includes('wind')
+                              ? 'cyclone'
+                              : titleLower.includes('flood') || titleLower.includes('water') || titleLower.includes('drain')
+                              ? 'flood'
+                              : 'gobag';
+                          if (onOpenChecklist) {
+                            onOpenChecklist(targetDisaster);
+                          } else {
+                            onNavigateTab('checklists');
+                          }
+                        }}
+                        className="h-[42px] px-2.5 rounded-lg bg-[#081534] hover:bg-[#152758] text-white flex items-center gap-1 text-[11px] font-bold active:scale-95 transition-all shadow-xs"
+                        title={language === 'en' ? 'View Offline Checklist for this alert' : 'ఈ హెచ్చరికకు రక్షణ చెక్‌లిస్ట్'}
+                      >
+                        <span className="material-symbols-outlined text-[17px]">fact_check</span>
+                        <span className="hidden xs:inline">{language === 'en' ? 'Checklist' : 'రక్షణ ప్లాన్'}</span>
+                      </button>
                       <button
                         onClick={() => speakAlert(item)}
                         aria-label="Listen in Telugu or English"

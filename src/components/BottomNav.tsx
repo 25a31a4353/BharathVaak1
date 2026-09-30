@@ -29,6 +29,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       badge: true,
     },
     {
+      id: 'checklists' as NavTab,
+      labelEn: 'Prepare',
+      labelTe: 'రక్షణ ప్లాన్',
+      icon: 'fact_check',
+    },
+    {
       id: 'sos' as NavTab,
       labelEn: 'SOS',
       labelTe: 'ఎస్.ఓ.ఎస్',
@@ -80,19 +86,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
               aria-current={isActive ? 'page' : undefined}
-              className={`relative flex flex-col items-center justify-center gap-1 min-h-[48px] min-w-[48px] px-2 transition-colors rounded-lg ${
+              className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[48px] min-w-[44px] px-1 sm:px-2 transition-colors rounded-lg ${
                 isActive
                   ? 'text-[#081534] font-bold'
                   : 'text-[#45464e] hover:text-[#081534]'
               }`}
             >
               <span
-                className="material-symbols-outlined text-[24px]"
+                className="material-symbols-outlined text-[22px] sm:text-[24px]"
                 style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
               >
                 {tab.icon}
               </span>
-              <span className="text-[11px] leading-tight">
+              <span className="text-[10px] sm:text-[11px] leading-tight text-center truncate max-w-[56px]">
                 {language === 'en' ? tab.labelEn : tab.labelTe}
               </span>
               {tab.badge && !isActive && (

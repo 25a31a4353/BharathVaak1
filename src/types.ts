@@ -1,6 +1,6 @@
 export type Language = 'en' | 'te';
 
-export type NavTab = 'home' | 'alerts' | 'sos' | 'map' | 'community';
+export type NavTab = 'home' | 'alerts' | 'checklists' | 'sos' | 'map' | 'community';
 
 export type AlertCategory = 'all' | 'critical' | 'weather' | 'nearby' | 'civil';
 
